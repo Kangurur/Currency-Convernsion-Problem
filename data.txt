@@ -1,0 +1,4 @@
+A: pln X 1.5
+A: pln Y 2
+B: Y X 1 
+C: X target 1.888
