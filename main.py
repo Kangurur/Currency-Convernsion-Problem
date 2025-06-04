@@ -38,11 +38,13 @@ class Converter:
         dist[base_cur] = 0 #log(1.0)=0
         n = len(self.currencies)
         for _ in range(n):
+            new_dist=dist.copy()
             for cur, edges in self.graph.items():
                 for result_cur, val, source in edges:
-                    if dist[cur] + val > dist[result_cur]:
-                        dist[result_cur] = dist[cur] + val
+                    if dist[cur] + val > new_dist[result_cur]:
+                        new_dist[result_cur] = dist[cur] + val
                         prev[result_cur] = (cur, source, val)
+            dist = new_dist
                         
         if final_cur == "all":
             for cur in self.currencies:
