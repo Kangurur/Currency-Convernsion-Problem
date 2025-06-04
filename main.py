@@ -28,7 +28,7 @@ class Converter:
                 for result_cur, val, source in edges:
                     print(f"  {base_cur} -> {result_cur}: {np.exp(val)} (source: {source})")
                     
-    def convert(self, base_cur, result_cur="all", amount=1.0):
+    def convert(self, base_cur, final_cur="all", amount=1.0):
         dist = {}
         prev = {}
         for cur in self.currencies:
@@ -36,39 +36,38 @@ class Converter:
             prev[cur] = None
         
         dist[base_cur] = 0 #log(1.0)=0
-        pq = [(0, base_cur)]
-        
-        while pq:
-            current_dist, current_cur = heapq.heappop(pq)
-            
-            if current_dist < dist[current_cur]:
-                continue
-            
-            for neighbor, weight, source in self.graph.get(current_cur, []):
-                distance = current_dist + weight
-                
-                if distance > dist[neighbor]:
-                    dist[neighbor] = distance
-                    prev[neighbor] = (current_cur, source, weight)
-                    heapq.heappush(pq, (distance, neighbor))
-                    
-        if result_cur != "all":
-            if result_cur in dist:
-                return np.exp(dist[result_cur]) * amount
-            else:
-                raise ValueError(f"Currency {result_cur} not found in the graph.")
-        else:
-            results = {}
-            for cur in dist:
+        n = len(self.currencies)
+        for _ in range(n):
+            for cur, edges in self.graph.items():
+                for result_cur, val, source in edges:
+                    if dist[cur] + val > dist[result_cur]:
+                        dist[result_cur] = dist[cur] + val
+                        prev[result_cur] = (cur, source, val)
+                        
+        if final_cur == "all":
+            for cur in self.currencies:
                 if dist[cur] > -float('inf'):
-                    results[cur] = floor(float(np.exp(dist[cur]) * amount*100))/100
-            return results
+                    print(f"{base_cur} -> {cur}: {np.exp(dist[cur]) * amount}")
+                else:
+                    print(f"{base_cur} -> {cur}: No conversion available")
+        else:
+            if final_cur in dist and dist[final_cur] > -float('inf'):
+                print(f"{base_cur} -> {final_cur}: {np.exp(dist[final_cur]) * amount}")
+                print(f"Conversion path:")
+                path = []
+                current = final_cur
+                while current is not None:
+                    if prev[current] is not None:
+                        path.append((prev[current][0], current, np.exp(prev[current][2])))
+                    current = prev[current][0] if prev[current] else None
+                path.reverse()
+                for src, dest, val in path:
+                    print(f"  {src} -> {dest}: {val} (source: {prev[dest][1]})")
+            else:
+                print(f"{base_cur} -> {final_cur}: No conversion available")
+                
         
-                    
-                    
-
-
-
+                               
 XD=Converter('data.txt')
 XD.check_graph()
-print(XD.convert("pln"))
+XD.convert("pln","target")
