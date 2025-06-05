@@ -1,6 +1,4 @@
 import numpy as np
-import heapq
-from math import floor
 
 class Converter:
     def __init__(self, file:str):
